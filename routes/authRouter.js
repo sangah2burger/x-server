@@ -6,6 +6,10 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const secret = process.env.JWT_SECRET;
+
+const upload = require('./uploadImage');
+router.post('/sign-up', upload.single('image'));
+
 const createHash = async (password, saltRound) => {
     let hashed = await bcrypt.hash(password, saltRound);
     console.log(hashed);
@@ -14,10 +18,11 @@ const createHash = async (password, saltRound) => {
 
 router.post('/sign-up', async (req, res)=> {
     const member = req.body;
+    member.profile = req.filename;
     member.password = await createHash(member.password, 10); // 암호화된 password로 바꿔치기
     try {
         const result = await User.create(member);
-        res.json({ success: true, memeber: result, message: "회원가입 성공"});
+        res.json({ success: true, member: result, message: "회원가입 성공"});
     } catch(err) {
         res.json({ success: false, member:[], message: err.message });
     }
@@ -26,7 +31,7 @@ router.post('/sign-up', async (req, res)=> {
 router.post('/sign-in', async(req, res)=> {
     const { userID, password } = req.body;
     const options = {
-        attributes: ['password'],
+        attributes: ['password', 'userID', 'profile', 'userName'],
         where: { userID: userID } // DB의 컬럼, 
     }
     const result = await User.findOne(options);
@@ -37,13 +42,21 @@ router.post('/sign-in', async(req, res)=> {
             const token = jwt.sign({ uid: userID, rol: 'admin' }, secret)
             res.json({ success: true,
             token: token,
+            member: {
+                userID, 
+                "profile": result.profile,
+                "userName": result.userName
+            },
             message: '로그인에 성공했습니다.',
         })
         } else { 
-            res.json({ success: false, message: "비밀번호가 틀립니다." });
+            res.json({
+                success: false,
+                token: '',
+                message: "비밀번호가 틀립니다." });
         }
     } else {
-        res.json({ success: false, message: "존재하지 않는 아이디입니다." });
+        res.json({ success: false, token: '', message: "존재하지 않는 아이디입니다." });
     }
 });
 

@@ -16,6 +16,10 @@ class User extends Sequelize.Model {
                 password : {
                     type: Sequelize.STRING(200),
                     allowNull : false,
+                },
+                profile: {
+                    type: Sequelize.STRING(100),
+                    allowNull: false
                 }
             },
             { // 테이블 설정이 객체로 전달

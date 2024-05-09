@@ -15,7 +15,7 @@ const checkAuth = require('./routes/authorization')
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended : true }));
-app.use('/posts', checkAuth);
+app.use('/posts', checkAuth); // post로 시작하면 무조건 인증
 app.use('/posts', postRouter);
 app.use('/member', authRouter);
 
